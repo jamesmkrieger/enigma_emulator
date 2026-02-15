@@ -12,6 +12,7 @@ __all__ = ['ROTOR_OPTIONS', 'Rotor', 'rotor_from_name',
            'REFLECTOR_OPTIONS', 'Reflector']
 
 from .core import EncodingDict, ALPHABET
+from .plugboard import Plugboard, PlugLead
 from numbers import Integral
 
 ROTOR_OPTIONS = {
@@ -196,9 +197,15 @@ class Rotor(EncodingDict):
 def rotor_from_name(name):
     return Rotor(name)
 
-class Reflector(Rotor):
+
+class Reflector(Rotor, Plugboard):
     """
-    This is essentially the same as a rotor but doesn't rotate
+    This is essentially the same as a rotor but doesn't rotate.
+
+    It is also based on Plugboard as it has leads, which can be perturbed
+
+    Because it reflects, the machine can just encode from right to left.
+    Therefore, add lead perturbations only needs to affect the right dictionary
     """
     def rotate(self):
         # don't have anything happen
@@ -206,6 +213,44 @@ class Reflector(Rotor):
 
     def __repr__(self):
         return f'Reflector: ({self._name})'
+
+    def add(self, lead):
+        """
+        Add a :class:`~.PlugLead` instance *lead*
+        to update the relevant dictionary
+
+        :arg lead: a PlugLead instance that updates the dict
+        :type lead: :class:`~.PlugLead`
+
+        This function is used by :meth:`~.addLead` and :meth:`~.addLeads`,
+        which are inherited from :class:`~.Plugboard`
+        """
+        # Update the dictionary with reassigned values once
+        for key, value in lead.getDict(subset=True).items():
+            self._dict['right'][key] = value
+
+    def swapLeads(self, start_points):
+        """
+        Swap a pair of leads based on one pair of *start_points*
+        """
+        if not isinstance(start_points, (str,list)):
+            raise TypeError("start_points should be a string or list")
+        end_points = [self._dict['right'][key] for key in start_points]
+        pairs = [f"{start}{list(reversed(end_points))[i]}"
+                 for (i, start) in enumerate(start_points)]
+        self.addLeads(pairs)
+
+    def makeSwaps(self, pairs):
+        """
+        Swap multiple pair of leads based on *pairs* of start_points
+        """
+        if isinstance(pairs, str):
+            pairs = pairs.split(" ")
+        if not isinstance(pairs, list):
+            raise TypeError("pairs should be a string or list")
+
+        [self.swapLeads(pair) for pair in pairs]
+
 
 if __name__ == "__main__":
     # You can use this section to write tests and demonstrations of your enigma code.

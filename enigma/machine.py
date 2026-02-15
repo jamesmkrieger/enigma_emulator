@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-  * :class:`.Machine` puts it all together
+This module contains :class:`.Machine` that brings contents
+from other modules together to emulate an Enigma machine.
 """
 
-__all__ = ['Machine', "SETTINGS"]
+__all__ = ['Machine']
 
 from .core import ALPHABET
 from .plugboard import Plugboard
@@ -20,7 +21,9 @@ class Machine():
                  reflector: str | None='A',
                  ring_setting: str | list | None=None,
                  position_setting: str | list | None=None,
-                 plugboard_mappings: str | list | None=None):
+                 plugboard_mappings: str | list | None=None,
+                 reflector_mapping_swaps: str | list | None=None,
+                 ):
         """
         Initialise a Machine instance with the relevant components
 
@@ -41,7 +44,10 @@ class Machine():
 
         :arg plugboard_mappings: mappings to initialise plugboard leads
             default is to build an empty one
-        :type reflector: :class:`.Plugboard`
+        :type plugboard_mappings: str, list
+
+        :arg reflector_mapping_swaps: mappings to replace reflector leads
+        :type reflector_mapping_swaps: str, list
         """
         self._plugboard = Plugboard(plugboard_mappings)
 
@@ -69,6 +75,8 @@ class Machine():
             ))
         self._reflector = Reflector(reflector)
 
+        if reflector_mapping_swaps is not None:
+            self._reflector.makeSwaps(reflector_mapping_swaps)
 
     def addRotor(self, name, position=None):
         if position is None:
@@ -208,6 +216,9 @@ class Machine():
                 rotor.setRingOffset(position)
             else:
                 rotor.rotateToPosition(position)
+
+    def updateReflectorLeads(self, mappings):
+        self._reflector.addLeads(mappings)
 
     def getNextRotor(self, slot=0, left_to_right=False):
         next = slot-1 if left_to_right else slot+1
