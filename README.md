@@ -1,0 +1,1 @@
+Here is my first solo complete object-oriented programming package, made for the first module called "Principles of Programming for Artificial Intelligence" of my part-time online MSc in Artificial Intelligence at the University of Bath.
